@@ -1,12 +1,19 @@
-﻿<Window x:Class="HelixSCARA.MainWindow"
+﻿<Window 
+        x:Class="HelixSCARA.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:h="http://helix-toolkit.org/wpf" 
         xmlns:local="clr-namespace:HelixSCARA"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <h:HelixViewport3D ZoomExtentsWhenLoaded="True" Margin="0,63,0,0" Name="m_helix_viewport">
+ 
+            <!-- Remember to add light to the scene -->
+            <h:SunLight/>
+
+        </h:HelixViewport3D>
     </Grid>
 </Window>
