@@ -7,9 +7,9 @@
         xmlns:h="http://helix-toolkit.org/wpf" 
         xmlns:local="clr-namespace:HelixSCARA"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="550" Width="900">
     <Grid>
-        <h:HelixViewport3D ZoomExtentsWhenLoaded="True" Margin="0,63,0,0" Name="m_helix_viewport">
+        <h:HelixViewport3D x:Name="viewPort3d" ViewCubeHeight="150" ViewCubeWidth="150" ViewCubeVerticalPosition="Bottom" CoordinateSystemLabelForeground="White" CoordinateSystemVerticalPosition="Center" CoordinateSystemHorizontalPosition="Right" CoordinateSystemHeight="150" CoordinateSystemWidth="150" RenderOptions.BitmapScalingMode="HighQuality" RenderOptions.EdgeMode="Unspecified" BorderBrush="Black" BorderThickness="5" ShowCoordinateSystem="True" ShowFrameRate="True" Grid.Column="1" ShowCameraInfo="True" MouseLeftButtonUp="ViewPort3D_OnMouseLeftButtonUp" MouseLeftButtonDown="ViewPort3D_OnMouseLeftButtonDown" IsManipulationEnabled="True" IsViewCubeEdgeClicksEnabled="True">
  
             <!-- Remember to add light to the scene -->
             <h:SunLight/>
