@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Runtime.InteropServices;
 
 namespace HelixSCARA
 {
@@ -35,6 +36,31 @@ namespace HelixSCARA
             model = pModel;
         }
     }
+    [Serializable] // 指示可序列化
+    [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
+    struct RobotData
+    {
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] JointsNow;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] JointsNext;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] JointsVelNow;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] JointsVelNext;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)] // 声明一个字符数组，大小为6*8
+        public  double[] Origin6axisForce;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] JointsTorque;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] CartesianPositionNow;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] CartesianPositionNext;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public  double[] CartesianVelNow;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
+        public double[] CartesianVelNext;
+    };
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -46,6 +72,8 @@ namespace HelixSCARA
         ModelVisual3D RoboticArm = new ModelVisual3D();
         GeometryModel3D oldSelectedModel = null;
         Color oldColor = Colors.White;
+
+        Client client;    // 客户端实例
         public MainWindow()
         {
             InitializeComponent();
@@ -65,12 +93,60 @@ namespace HelixSCARA
             viewPort3d.Camera.LookDirection = new Vector3D(2038, -5200, -2930);
             viewPort3d.Camera.UpDirection = new Vector3D(-0.145, 0.372, 0.917);
             viewPort3d.Camera.Position = new Point3D(-1571, 4801, 3774);
+
+            ConnetServer(); 
+        }
+
+        //连接服务器
+        public void ConnetServer()
+        {
+            if (client == null) client = new Client(ClientPrint, "192.168.1.100", "8888");
+            if (!client.connected) client.start();
+           // if (client != null) thi = "客户端 " + client.localIpPort;
+        }
+
+        //调试的时候打印显示信息
+        private void ClientPrint(string info)
+        {
+            System.Diagnostics.Debug.WriteLine(info);
+            //if (textBox_showing.InvokeRequired)
+            //{
+            //    Client.Print F = new Client.Print(ClientPrint);
+            //    this.Invoke(F, new object[] { info });
+            //}
+            //else
+            //{
+            //    if (info != null)
+            //    {
+            //        textBox_showing.SelectionColor = Color.Green;
+            //        textBox_showing.AppendText(info);
+            //        textBox_showing.AppendText(Environment.NewLine);
+            //        textBox_showing.ScrollToCaret();
+            //    }
+            //}
+        }
+
+        //将sockct接受的字符转化成Robot对象
+        T ByteArrayToStructure<T>(byte[] bytes) where T : struct    //where表示约束，只能为struct
+        {
+            T stuff;
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                stuff = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            }
+            finally
+            {
+                handle.Free();
+            }
+            return stuff;
         }
         private void ViewPort3D_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Point mousePos = e.GetPosition(viewPort3d);
             PointHitTestParameters hitParams = new PointHitTestParameters(mousePos);
             VisualTreeHelper.HitTest(viewPort3d, null, ResultCallback, hitParams);
+           // System.Diagnostics.Debug.WriteLine("测试打印信息");
         }
 
         private void ViewPort3D_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
