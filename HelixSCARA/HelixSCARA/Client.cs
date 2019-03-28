@@ -11,12 +11,12 @@ namespace HelixSCARA
 {
     class Client
     {
-        public string ipString = "192.168.1.100";   // 服务器端ip
+        public string ipString = "127.0.0.1";   // 服务器端ip
         public int port = 8888;                // 服务器端口
         public Socket socket;
         public Print print;                     // 运行时的信息输出方法,委托的函数名
         public bool connected = false;          // 标识当前是否连接到服务器
-        public string localIpPort = "192.168.1.100";         // 记录本地ip端口信息
+        public string localIpPort = "";         // 记录本地ip端口信息
         public delegate void Print(string info);// 运行时的信息输出方法,委托的函数名
         public Client(Print print = null, string ipString = null, int port = -1)
         {
@@ -34,7 +34,19 @@ namespace HelixSCARA
             if (port_int >= 0) this.port = port_int;
         }
 
-
+        public string GetLocalIp()
+        {
+            ///获取本地的IP地址
+            string AddressIP = string.Empty;
+            foreach (IPAddress _IPAddress in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+            {
+                if (_IPAddress.AddressFamily.ToString() == "InterNetwork")
+                {
+                    AddressIP = _IPAddress.ToString();
+                }
+            }
+            return AddressIP;
+        }
         /// <summary>
         /// Print用于输出Server的输出信息
         /// </summary>
@@ -44,6 +56,11 @@ namespace HelixSCARA
         /// </summary>
         public void start()
         {
+            if(ipString=="127.0.0.1")
+            {
+                ipString = GetLocalIp();
+            }
+            System.Diagnostics.Debug.WriteLine("ServeripPort:" + ipString);
             //设定服务器IP地址  
             IPAddress ip = IPAddress.Parse(ipString);
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -54,7 +71,7 @@ namespace HelixSCARA
                 if (print != null) print("连接服务器【" + ipString + "】完成"); // 连接成功
                 localIpPort = socket.LocalEndPoint.ToString();
                 connected = true;
-
+                System.Diagnostics.Debug.WriteLine("localipPort:"+localIpPort);
                 Thread thread = new Thread(receiveData);
                 thread.Start(socket);      // 在新的线程中接收服务器信息
             }

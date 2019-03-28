@@ -100,7 +100,7 @@ namespace HelixSCARA
         //连接服务器
         public void ConnetServer()
         {
-            if (client == null) client = new Client(ClientPrint, "192.168.1.100", "8888");
+            if (client == null) client = new Client(ClientPrint, "127.0.0.1", "8888");
             if (!client.connected) client.start();
            // if (client != null) thi = "客户端 " + client.localIpPort;
         }
