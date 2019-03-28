@@ -106,28 +106,26 @@ namespace HelixSCARA
         }
 
         //调试的时候打印显示信息
-        private void ClientPrint(string info)
+
+        private void ClientPrint(RobotData? info)
         {
-            System.Diagnostics.Debug.WriteLine(info);
-            //if (textBox_showing.InvokeRequired)
-            //{
-            //    Client.Print F = new Client.Print(ClientPrint);
-            //    this.Invoke(F, new object[] { info });
-            //}
-            //else
-            //{
-            //    if (info != null)
-            //    {
-            //        textBox_showing.SelectionColor = Color.Green;
-            //        textBox_showing.AppendText(info);
-            //        textBox_showing.AppendText(Environment.NewLine);
-            //        textBox_showing.ScrollToCaret();
-            //    }
-            //}
+            RobotData robot = info.Value;
+            double a = robot.JointsNow[0];
+            double b = robot.CartesianPositionNow[1];
+            double c = robot.JointsNow[2];
+            double d = robot.JointsNow[3];
+            double e = robot.JointsTorque[0];
+
+            System.Diagnostics.Debug.WriteLine(c);
+            System.Diagnostics.Debug.WriteLine('\n');
+            System.Diagnostics.Debug.WriteLine(e);
+            System.Diagnostics.Debug.WriteLine('\n');
+            System.Diagnostics.Debug.WriteLine(b);
+            System.Diagnostics.Debug.WriteLine('\n');
         }
 
         //将sockct接受的字符转化成Robot对象
-        T ByteArrayToStructure<T>(byte[] bytes) where T : struct    //where表示约束，只能为struct
+        public static T ByteArrayToStructure<T>(byte[] bytes) where T : struct    //where表示约束，只能为struct
         {
             T stuff;
             GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);

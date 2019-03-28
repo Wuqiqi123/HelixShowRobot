@@ -17,7 +17,7 @@ namespace HelixSCARA
         public Print print;                     // 运行时的信息输出方法,委托的函数名
         public bool connected = false;          // 标识当前是否连接到服务器
         public string localIpPort = "";         // 记录本地ip端口信息
-        public delegate void Print(string info);// 运行时的信息输出方法,委托的函数名
+        public delegate void Print(RobotData? info);// 运行时的信息输出方法,委托的函数名
         public Client(Print print = null, string ipString = null, int port = -1)
         {
             this.print = print;
@@ -68,7 +68,7 @@ namespace HelixSCARA
             try
             {
                 socket.Connect(new IPEndPoint(ip, port));   // 连接服务器
-                if (print != null) print("连接服务器【" + ipString + "】完成"); // 连接成功
+                //if (print != null) print("连接服务器【" + ipString + "】完成"); // 连接成功
                 localIpPort = socket.LocalEndPoint.ToString();
                 connected = true;
                 System.Diagnostics.Debug.WriteLine("localipPort:"+localIpPort);
@@ -77,7 +77,7 @@ namespace HelixSCARA
             }
             catch (Exception ex)
             {
-                if (print != null) print("连接服务器失败 " + ex.ToString()); // 连接失败
+                //if (print != null) print("连接服务器失败 " + ex.ToString()); // 连接失败
                 connected = false;
             }
         }
@@ -101,7 +101,7 @@ namespace HelixSCARA
             }
             catch (Exception ex)
             {
-                if (print != null) print("服务器端已断开，【" + socket.RemoteEndPoint.ToString() + "】");
+                //if (print != null) print("服务器端已断开，【" + socket.RemoteEndPoint.ToString() + "】");
             }
         }
 
@@ -128,8 +128,8 @@ namespace HelixSCARA
             {
                 try
                 {
-                    String data = Receive(ortherSocket);       // 接收发送的信息
-                    if (!data.Equals(""))
+                    RobotData? data = Receive(ortherSocket);       // 接收发送的信息
+                    if (data!=null)
                     {
                         //if (print != null) print("服务器" + ortherSocket.RemoteEndPoint.ToString() + "信息：\r\n" + data);
                         if (print != null) print(data);
@@ -138,7 +138,7 @@ namespace HelixSCARA
                 }
                 catch (Exception ex)
                 {
-                    if (print != null) print("连接已自动断开，" + ex.Message);
+                    //if (print != null) print("连接已自动断开，" + ex.Message);
                     ortherSocket.Shutdown(SocketShutdown.Both);
                     ortherSocket.Close();
                     connected = false;
@@ -151,20 +151,23 @@ namespace HelixSCARA
         /// <summary>
         /// 从socket接收数据
         /// </summary>
-        private string Receive(Socket socket)
+        private RobotData? Receive(Socket socket)
         {
             string data = "";
 
             byte[] bytes = null;
             int len = socket.Available;
+            RobotData? robdata =null;   //支持空对象
             if (len > 0)
             {
                 bytes = new byte[len];
                 int receiveNumber = socket.Receive(bytes);
-                data = Encoding.UTF8.GetString(bytes, 0, receiveNumber);
+                robdata = MainWindow.ByteArrayToStructure<RobotData>(bytes);
+                //data = Encoding.UTF8.GetString(bytes, 0, receiveNumber);
             }
 
-            return data;
+            return robdata;
+            //return data;
         }
     }
 }
