@@ -15,6 +15,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace HelixSCARA
 {
@@ -68,21 +69,40 @@ namespace HelixSCARA
     {
         Model3DGroup RA = new Model3DGroup(); //RoboticArm 3d group
         Model3D geom = null; //Debug sphere to check in which point the joint is rotatin
+
+        List<Joint> joints = null;
+
         ModelVisual3D visual;
         ModelVisual3D RoboticArm = new ModelVisual3D();
         GeometryModel3D oldSelectedModel = null;
         Color oldColor = Colors.White;
+        string basePath = "";
 
+        /// <summary>
+
+        private const string MODEL_PATH1 = "SCARA_Robot - Base-1.STL";
+        private const string MODEL_PATH2 = "SCARA_Robot - Link1-1.STL";
+        private const string MODEL_PATH3 = "SCARA_Robot - Link2-1.STL";
+        private const string MODEL_PATH4 = "SCARA_Robot - Move-1.STL";
+        private const string MODEL_PATH5 = "SCARA_Robot - Rot-1.STL";
+        /// </summary>
         Client client;    // 客户端实例
         public MainWindow()
         {
             InitializeComponent();
+            basePath = Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName) + "\\Models\\";
+            List<string> modelsNames = new List<string>();
+            modelsNames.Add(MODEL_PATH1);
+            modelsNames.Add(MODEL_PATH2);
+            modelsNames.Add(MODEL_PATH3);
+            modelsNames.Add(MODEL_PATH4);
+            modelsNames.Add(MODEL_PATH5);
 
-
+            RoboticArm.Content = Initialize_Environment(modelsNames);
 
             var builder = new MeshBuilder(true, true);
             var position = new Point3D(0, 0, 0);
-            builder.AddSphere(position, 50, 15, 15);
+            builder.AddSphere(position, 20, 15, 15);
             geom = new GeometryModel3D(builder.ToMesh(), Materials.Brown);
             visual = new ModelVisual3D();
             visual.Content = geom;
@@ -90,13 +110,94 @@ namespace HelixSCARA
             viewPort3d.PanGesture = new MouseGesture(MouseAction.LeftClick);
             viewPort3d.Children.Add(visual);
             viewPort3d.Children.Add(RoboticArm);
-            viewPort3d.Camera.LookDirection = new Vector3D(2038, -5200, -2930);
-            viewPort3d.Camera.UpDirection = new Vector3D(-0.145, 0.372, 0.917);
-            viewPort3d.Camera.Position = new Point3D(-1571, 4801, 3774);
+            viewPort3d.Camera.LookDirection = new Vector3D(-1077, 1684, -877);
+            viewPort3d.Camera.UpDirection = new Vector3D(0.248, -0.390, 0.887);
+            viewPort3d.Camera.Position = new Point3D(1620, -1753, 1355);
 
             ConnetServer(); 
         }
 
+       private Model3DGroup Initialize_Environment(List<string> modelsNames)
+        {
+            try
+            {
+                ModelImporter import = new ModelImporter();
+                joints = new List<Joint>();
+
+                foreach (string modelName in modelsNames)
+                {
+                    var materialGroup = new MaterialGroup();
+                    Color mainColor = Colors.White;
+                    EmissiveMaterial emissMat = new EmissiveMaterial(new SolidColorBrush(mainColor));
+                    DiffuseMaterial diffMat = new DiffuseMaterial(new SolidColorBrush(mainColor));
+                    SpecularMaterial specMat = new SpecularMaterial(new SolidColorBrush(mainColor), 200);
+                    materialGroup.Children.Add(emissMat);
+                    materialGroup.Children.Add(diffMat);
+                    materialGroup.Children.Add(specMat);
+
+                    var link = import.Load(basePath + modelName);
+                    GeometryModel3D model = link.Children[0] as GeometryModel3D;
+                    model.Material = materialGroup;
+                    model.BackMaterial = materialGroup;
+                    joints.Add(new Joint(link));
+                }
+
+                RA.Children.Add(joints[0].model);
+                RA.Children.Add(joints[1].model);
+                RA.Children.Add(joints[2].model);
+                RA.Children.Add(joints[3].model);
+                RA.Children.Add(joints[4].model);
+
+                changeModelColor(joints[0], Colors.Red);
+                changeModelColor(joints[1], Colors.Pink);
+                changeModelColor(joints[2], Colors.Blue);
+                changeModelColor(joints[3], Colors.Green);
+                changeModelColor(joints[4], Colors.Yellow);
+
+
+                joints[0].angleMin = -180;
+                joints[0].angleMax = 180;
+                joints[0].rotAxisX = 0;
+                joints[0].rotAxisY = 0;
+                joints[0].rotAxisZ = 1;
+                joints[0].rotPointX = 0;
+                joints[0].rotPointY = 0;
+                joints[0].rotPointZ = 0;
+
+                joints[1].angleMin = -100;
+                joints[1].angleMax = 60;
+                joints[1].rotAxisX = 0;
+                joints[1].rotAxisY = 1;
+                joints[1].rotAxisZ = 0;
+                joints[1].rotPointX = 175;
+                joints[1].rotPointY = -200;
+                joints[1].rotPointZ = 500;
+
+                joints[2].angleMin = -90;
+                joints[2].angleMax = 90;
+                joints[2].rotAxisX = 0;
+                joints[2].rotAxisY = 1;
+                joints[2].rotAxisZ = 0;
+                joints[2].rotPointX = 190;
+                joints[2].rotPointY = -700;
+                joints[2].rotPointZ = 1595;
+
+                joints[3].angleMin = -180;
+                joints[3].angleMax = 180;
+                joints[3].rotAxisX = 1;
+                joints[3].rotAxisY = 0;
+                joints[3].rotAxisZ = 0;
+                joints[3].rotPointX = 400;
+                joints[3].rotPointY = 0;
+                joints[3].rotPointZ = 1765;
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Exception Error:" + e.StackTrace);
+            }
+            return RA;
+        }
         //连接服务器
         public void ConnetServer()
         {

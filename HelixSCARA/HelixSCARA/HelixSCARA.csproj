@@ -115,6 +115,11 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Models\SCARA_Robot - Base-1.STL" />
+    <None Include="Models\SCARA_Robot - Link1-1.STL" />
+    <None Include="Models\SCARA_Robot - Link2-1.STL" />
+    <None Include="Models\SCARA_Robot - Move-1.STL" />
+    <None Include="Models\SCARA_Robot - Rot-1.STL" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -124,5 +129,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
