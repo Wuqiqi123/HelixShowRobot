@@ -25,9 +25,9 @@ namespace HelixSCARA
         public double angle = 0;
         public double angleMin = -180;
         public double angleMax = 180;
-        public int rotPointX = 0;
-        public int rotPointY = 0;
-        public int rotPointZ = 0;
+        public double rotPointX = 0;
+        public double rotPointY = 0;
+        public double rotPointZ = 0;
         public int rotAxisX = 0;
         public int rotAxisY = 0;
         public int rotAxisZ = 0;
@@ -37,6 +37,25 @@ namespace HelixSCARA
             model = pModel;
         }
     }
+    class ForceData
+    {
+        public double FX = 0;
+        public double FY = 0;
+        public double FZ = 0;
+        public double MX = 0;
+        public double MY = 0;
+        public double MZ = 0;
+        public ForceData(double Fx, double Fy, double Fz, double Mx, double My, double Mz)
+        {
+            FX = Fx;
+            FY = Fy;
+            FZ = Fz;
+            MX = Mx;
+            MY = My;
+            MZ = Mz;
+        }
+    }
+
     [Serializable] // 指示可序列化
     [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
     struct RobotData
@@ -68,23 +87,44 @@ namespace HelixSCARA
     public partial class MainWindow : Window
     {
         Model3DGroup RA = new Model3DGroup(); //RoboticArm 3d group
+        Model3DGroup FS = new Model3DGroup(); //力传感器系统
         Model3D geom = null; //Debug sphere to check in which point the joint is rotatin
+        Model3D AxisX = null;
+        Model3D AxisY = null;
+        Model3D AxisZ = null;
+        Model3D EndOrigin = null;
+        Model3D ForceModel = null;
+        Model3D TorqueModel = null;
+        ForceData FD = null;
 
         List<Joint> joints = null;
 
-        ModelVisual3D visual;
+        ModelVisual3D ForceSystem =new ModelVisual3D();
         ModelVisual3D RoboticArm = new ModelVisual3D();
         GeometryModel3D oldSelectedModel = null;
         Color oldColor = Colors.White;
         string basePath = "";
 
+        Transform3DGroup F1;
+        Transform3DGroup F2;
+        Transform3DGroup F3;
+        Transform3DGroup F4;
+        Transform3DGroup F5;
+        Transform3DGroup F6;
+        RotateTransform3D R;
+        TranslateTransform3D T;
+        TranslateTransform3D Tran_2;
+
+        //////////////
+
         /// <summary>
 
-        private const string MODEL_PATH1 = "SCARA_Robot - Base-1.STL";
-        private const string MODEL_PATH2 = "SCARA_Robot - Link1-1.STL";
-        private const string MODEL_PATH3 = "SCARA_Robot - Link2-1.STL";
-        private const string MODEL_PATH4 = "SCARA_Robot - Move-1.STL";
-        private const string MODEL_PATH5 = "SCARA_Robot - Rot-1.STL";
+        private const string MODEL_PATH1 = "SCARA_Robot - Link1-1.STL";
+        private const string MODEL_PATH2 = "SCARA_Robot - Link2-1.STL";
+        private const string MODEL_PATH3 = "SCARA_Robot - Move-1.STL";
+        private const string MODEL_PATH4 = "SCARA_Robot - Rot-1.STL";
+        private const string MODEL_PATH5 = "SCARA_Robot - Base-1.STL";
+
         /// </summary>
         Client client;    // 客户端实例
         public MainWindow()
@@ -100,21 +140,66 @@ namespace HelixSCARA
 
             RoboticArm.Content = Initialize_Environment(modelsNames);
 
-            var builder = new MeshBuilder(true, true);
-            var position = new Point3D(0, 0, 0);
-            builder.AddSphere(position, 20, 15, 15);
-            geom = new GeometryModel3D(builder.ToMesh(), Materials.Brown);
-            visual = new ModelVisual3D();
-            visual.Content = geom;
+            ForceSystem.Content = Initialize_ForceSystem();
+
             viewPort3d.RotateGesture = new MouseGesture(MouseAction.RightClick);
             viewPort3d.PanGesture = new MouseGesture(MouseAction.LeftClick);
-            viewPort3d.Children.Add(visual);
+            viewPort3d.Children.Add(ForceSystem);
             viewPort3d.Children.Add(RoboticArm);
             viewPort3d.Camera.LookDirection = new Vector3D(-1077, 1684, -877);
             viewPort3d.Camera.UpDirection = new Vector3D(0.248, -0.390, 0.887);
             viewPort3d.Camera.Position = new Point3D(1620, -1753, 1355);
+           
+
+            ///////////////////////////////////
 
             ConnetServer(); 
+        }
+        private Model3DGroup Initialize_ForceSystem()
+        {
+            List<MeshBuilder> builder = new List<MeshBuilder>();
+            var OriPosition = new Point3D(318.8, 44.29, 356.75);
+            List<Point3D> ForceCoordinateSystem = new List<Point3D>();
+            FD = new ForceData(OriPosition.X + 100, OriPosition.Y + 100, OriPosition.Z + 100, OriPosition.X -100, OriPosition.Y -100, OriPosition.Z -100);
+
+            var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);
+            var FAxisY = new Point3D(OriPosition.X +100, OriPosition.Y + 0, OriPosition.Z + 0);
+            var FAxisZ = new Point3D(OriPosition.X + 0, OriPosition.Y + 0, OriPosition.Z - 100);
+            ForceCoordinateSystem.Add(FAxisX);
+            ForceCoordinateSystem.Add(FAxisY);
+            ForceCoordinateSystem.Add(FAxisZ);
+
+            builder.Add(new MeshBuilder(true,true));
+            builder[0].AddSphere(OriPosition, 10);
+            EndOrigin = new GeometryModel3D(builder[0].ToMesh(), Materials.Brown);
+            FS.Children.Add(EndOrigin);
+
+            builder.Add(new MeshBuilder(true, true));
+            builder[1].AddArrow(OriPosition, ForceCoordinateSystem[0], 8);
+            AxisX = new GeometryModel3D(builder[1].ToMesh(), Materials.Red);
+            FS.Children.Add(AxisX);
+
+            builder.Add(new MeshBuilder(true, true));
+            builder[2].AddArrow(OriPosition, ForceCoordinateSystem[1], 8);
+            AxisY = new GeometryModel3D(builder[2].ToMesh(), Materials.Green);
+            FS.Children.Add(AxisY);
+
+            builder.Add(new MeshBuilder(true, true));
+            builder[3].AddArrow(OriPosition, ForceCoordinateSystem[2], 8);
+            AxisZ = new GeometryModel3D(builder[3].ToMesh(), Materials.Blue);
+            FS.Children.Add(AxisZ);
+
+            //builder.Add(new MeshBuilder(true, true));
+            //builder[4].AddArrow(OriPosition, new Point3D(FD.FX,FD.FY,FD.FZ), 5);
+            //ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
+            //FS.Children.Add(ForceModel);
+
+            //builder.Add(new MeshBuilder(true, true));
+            //builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 5);
+            //TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
+            //FS.Children.Add(TorqueModel);
+
+            return FS;
         }
 
        private Model3DGroup Initialize_Environment(List<string> modelsNames)
@@ -155,41 +240,41 @@ namespace HelixSCARA
                 changeModelColor(joints[4], Colors.Yellow);
 
 
-                joints[0].angleMin = -180;
-                joints[0].angleMax = 180;
+                joints[0].angleMin = -120;
+                joints[0].angleMax = 120;
                 joints[0].rotAxisX = 0;
                 joints[0].rotAxisY = 0;
                 joints[0].rotAxisZ = 1;
-                joints[0].rotPointX = 0;
-                joints[0].rotPointY = 0;
-                joints[0].rotPointZ = 0;
+                joints[0].rotPointX = -81.20;
+                joints[0].rotPointY = 44.29;
+                joints[0].rotPointZ = 133.25;
 
-                joints[1].angleMin = -100;
-                joints[1].angleMax = 60;
+                joints[1].angleMin = -150;
+                joints[1].angleMax = 150;
                 joints[1].rotAxisX = 0;
-                joints[1].rotAxisY = 1;
-                joints[1].rotAxisZ = 0;
-                joints[1].rotPointX = 175;
-                joints[1].rotPointY = -200;
-                joints[1].rotPointZ = 500;
+                joints[1].rotAxisY = 0;
+                joints[1].rotAxisZ = 1;
+                joints[1].rotPointX = 168.80;
+                joints[1].rotPointY = 44.29;
+                joints[1].rotPointZ = 343.5;
 
-                joints[2].angleMin = -90;
-                joints[2].angleMax = 90;
+                joints[2].angleMin = -100;
+                joints[2].angleMax = 100;
                 joints[2].rotAxisX = 0;
-                joints[2].rotAxisY = 1;
-                joints[2].rotAxisZ = 0;
-                joints[2].rotPointX = 190;
-                joints[2].rotPointY = -700;
-                joints[2].rotPointZ = 1595;
+                joints[2].rotAxisY = 0;
+                joints[2].rotAxisZ = 1;
+                joints[2].rotPointX = 318.8;
+                joints[2].rotPointY = 44.29;
+                joints[2].rotPointZ = 506.75;
 
                 joints[3].angleMin = -180;
                 joints[3].angleMax = 180;
-                joints[3].rotAxisX = 1;
+                joints[3].rotAxisX = 0;
                 joints[3].rotAxisY = 0;
-                joints[3].rotAxisZ = 0;
-                joints[3].rotPointX = 400;
-                joints[3].rotPointY = 0;
-                joints[3].rotPointZ = 1765;
+                joints[3].rotAxisZ = 1;
+                joints[3].rotPointX = 318.8;
+                joints[3].rotPointY = 44.29;
+                joints[3].rotPointZ = 386.75;
 
             }
             catch (Exception e)
@@ -328,6 +413,102 @@ namespace HelixSCARA
                 oldSelectedModel = (GeometryModel3D)pModel;
             }
             oldColor = changeModelColor(oldSelectedModel, ColorHelper.HexToColor("#ff3333"));
+        }
+
+        public Vector3D ForwardKinematics(double[] angles)
+        {
+
+            F1 = new Transform3DGroup();
+            T = new TranslateTransform3D();
+            // T = new TranslateTransform3D(joints[0].rotPointX, joints[0].rotPointY, joints[0].rotPointZ);
+            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[0].rotAxisX, joints[0].rotAxisY, joints[0].rotAxisZ), angles[0]), new Point3D(joints[0].rotPointX, joints[0].rotPointY, joints[0].rotPointZ));
+            F1.Children.Add(R);
+            F1.Children.Add(T);
+
+            //This moves the first joint attached to the base, it may translate and rotate. Since the joint are already in the right position (the .stl model also store the joints position
+            //in the virtual world when they were first created, so if you load all the .stl models of the joint they will be automatically positioned in the right locations)
+            //so in all of these cases the first translation is always 0, I just left it for future purposes if something need to be moved
+            //After that, the joint needs to rotate of a certain amount (given by the value in the slider), and the rotation must be executed on a specific point
+            //After some testing it looks like the point 175, -200, 500 is the sweet spot to achieve the rotation intended for the joint
+            //finally we also need to apply the transformation applied to the base 
+            F2 = new Transform3DGroup();
+            T = new TranslateTransform3D(0, 0, 0);
+            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[1].rotAxisX, joints[1].rotAxisY, joints[1].rotAxisZ), angles[1]), new Point3D(joints[1].rotPointX, joints[1].rotPointY, joints[1].rotPointZ));
+            F2.Children.Add(T);
+            F2.Children.Add(R);
+            F2.Children.Add(F1);
+
+            //The second joint is attached to the first one. As before I found the sweet spot after testing, and looks like is rotating just fine. No pre-translation as before
+            //and again the previous transformation needs to be applied
+            F3 = new Transform3DGroup();
+            T = new TranslateTransform3D(0, 0, 0);
+            Tran_2 = new TranslateTransform3D(joints[2].rotAxisX * joints[2].angle, joints[2].rotAxisY * joints[2].angle,  joints[2].rotAxisZ * joints[2].angle);
+            F3.Children.Add(T);
+            F3.Children.Add(Tran_2);
+            F3.Children.Add(F2);
+
+            //as before
+            F4 = new Transform3DGroup();
+            T = new TranslateTransform3D(0, 0, 0); //1500, 650, 1650
+            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[3].rotAxisX, joints[3].rotAxisY, joints[3].rotAxisZ), angles[3]), new Point3D(joints[3].rotPointX, joints[3].rotPointY, joints[3].rotPointZ));
+            F4.Children.Add(T);
+            F4.Children.Add(R);
+            F4.Children.Add(F3);
+
+            /////力的F的显示
+            F5 = new Transform3DGroup();
+            T = new TranslateTransform3D(0, 0, 0); 
+            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[3].rotAxisX, joints[3].rotAxisY, joints[3].rotAxisZ), angles[3]), new Point3D(joints[3].rotPointX, joints[3].rotPointY, joints[3].rotPointZ));
+            F5.Children.Add(T);
+            F5.Children.Add(R);
+            F5.Children.Add(F4);
+
+
+            F6 = new Transform3DGroup();
+            T = new TranslateTransform3D(0, 0, 0); 
+            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[3].rotAxisX, joints[3].rotAxisY, joints[3].rotAxisZ), angles[3]), new Point3D(joints[3].rotPointX, joints[3].rotPointY, joints[3].rotPointZ));
+            F6.Children.Add(T);
+            F6.Children.Add(R);
+            F6.Children.Add(F4);
+            //NB: I was having a nightmare trying to understand why it was always rotating in a weird way... SO I realized that the order in which
+            //you add the Children is actually VERY IMPORTANT in fact before I was applyting F and then T and R, but the previous transformation
+            //Should always be applied as last (FORWARD Kinematics)
+
+
+            joints[0].model.Transform = F1; //First joint
+            joints[1].model.Transform = F2; //Second joint (the "biceps")
+            joints[2].model.Transform = F3; //movemet joint 
+            joints[3].model.Transform = F4; //the rot
+            EndOrigin.Transform = F4;
+            AxisX.Transform = F4;
+            AxisY.Transform = F4;
+            AxisZ.Transform = F4;
+
+
+
+
+            return new Vector3D(joints[3].model.Bounds.Location.X, joints[3].model.Bounds.Location.Y, joints[3].model.Bounds.Location.Z);
+        }
+
+        private void joint_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+            joints[0].angle = joint1.Value;
+            joints[1].angle = joint2.Value;
+            joints[2].angle = joint3.Value;
+            joints[3].angle = joint4.Value;
+            execute_fk();
+        }
+        /**
+ * This methodes execute the FK (Forward Kinematics). It starts from the first joint, the base.
+ * */
+        private void execute_fk()
+        {
+            /** Debug sphere, it takes the x,y,z of the textBoxes and update its position
+             * This is useful when using x,y,z in the "new Point3D(x,y,z)* when defining a new RotateTransform3D() to check where the joints is actually  rotating */
+            double[] angles = { joints[0].angle, joints[1].angle, joints[2].angle, joints[3].angle};
+            ForwardKinematics(angles);
+            //updateSpherePosition();
         }
 
     }
