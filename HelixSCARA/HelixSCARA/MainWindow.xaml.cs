@@ -296,18 +296,25 @@ namespace HelixSCARA
         private void ClientPrint(RobotData? info)
         {
             RobotData robot = info.Value;
-            double a = robot.JointsNow[0];
-            double b = robot.CartesianPositionNow[1];
-            double c = robot.JointsNow[2];
-            double d = robot.JointsNow[3];
-            double e = robot.JointsTorque[0];
 
+            joints[0].angle = robot.JointsNow[0];
+            joints[1].angle = robot.JointsNow[1];
+            joints[2].angle = robot.JointsNow[2];
+            joints[3].angle = robot.JointsNow[3];
+
+            double a = robot.JointsNow[0];
+            //double b = robot.CartesianPositionNow[1];
+            double c = robot.JointsNow[2];
+            //double d = robot.JointsNow[3];
+            //double e = robot.JointsTorque[0];
+
+            System.Diagnostics.Debug.WriteLine(a);
+            System.Diagnostics.Debug.WriteLine('\n');
             System.Diagnostics.Debug.WriteLine(c);
             System.Diagnostics.Debug.WriteLine('\n');
-            System.Diagnostics.Debug.WriteLine(e);
-            System.Diagnostics.Debug.WriteLine('\n');
-            System.Diagnostics.Debug.WriteLine(b);
-            System.Diagnostics.Debug.WriteLine('\n');
+            //System.Diagnostics.Debug.WriteLine(b);
+            //System.Diagnostics.Debug.WriteLine('\n');
+            execute_fk();
         }
 
         //将sockct接受的字符转化成Robot对象
