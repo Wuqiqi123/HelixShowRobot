@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Title="HelixSCARA" Height="750" Width="1100">
     <Grid>
-        <h:HelixViewport3D x:Name="viewPort3d" ViewCubeHeight="150" ViewCubeWidth="150" ViewCubeVerticalPosition="Bottom" CoordinateSystemLabelForeground="White" CoordinateSystemVerticalPosition="Center" CoordinateSystemHorizontalPosition="Right" CoordinateSystemHeight="120" CoordinateSystemWidth="120" RenderOptions.BitmapScalingMode="HighQuality" RenderOptions.EdgeMode="Unspecified" BorderBrush="Black" BorderThickness="5" ShowCoordinateSystem="True" ShowFrameRate="True" Grid.Column="1" ShowCameraInfo="True" MouseLeftButtonUp="ViewPort3D_OnMouseLeftButtonUp" MouseLeftButtonDown="ViewPort3D_OnMouseLeftButtonDown" IsManipulationEnabled="True" IsViewCubeEdgeClicksEnabled="True">
+        <h:HelixViewport3D x:Name="viewPort3d" ViewCubeHeight="150" ViewCubeWidth="150" ViewCubeVerticalPosition="Bottom" CoordinateSystemLabelForeground="White" CoordinateSystemVerticalPosition="Center" CoordinateSystemHorizontalPosition="Right" CoordinateSystemHeight="120" CoordinateSystemWidth="120" RenderOptions.BitmapScalingMode="HighQuality" RenderOptions.EdgeMode="Unspecified" BorderBrush="Black" BorderThickness="5" ShowCoordinateSystem="True" ShowFrameRate="True" ShowCameraInfo="True" MouseLeftButtonUp="ViewPort3D_OnMouseLeftButtonUp" MouseLeftButtonDown="ViewPort3D_OnMouseLeftButtonDown" IsManipulationEnabled="True" IsViewCubeEdgeClicksEnabled="True" Margin="0,-20,-0.4,19.8">
 
             <h:HelixViewport3D.Background>
                 <!--背景显示为渐变蓝色-->
@@ -22,10 +22,24 @@
             <h:GridLinesVisual3D Width="16000" Length="16000" Thickness="1.5" MinorDistance="50" MajorDistance="200" Fill="#E5CFCECE" />
             <h:DefaultLights/>
         </h:HelixViewport3D>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="211" Margin="21,19,0,0" Stroke="Black" VerticalAlignment="Top" Width="234"/>
-        <Slider x:Name="joint1" HorizontalAlignment="Left" Margin="21,46,0,0" Width="210" VerticalAlignment="Top" Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
-        <Slider x:Name="joint2" HorizontalAlignment="Left" Margin="21,84,0,0"  Width="210" VerticalAlignment="Top"  Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
-        <Slider x:Name="joint3" HorizontalAlignment="Left" Margin="21,126,0,0" VerticalAlignment="Top" Width="210"  Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
-        <Slider x:Name="joint4" HorizontalAlignment="Left" Margin="21,165,0,0" VerticalAlignment="Top" Width="210"  Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="193" Margin="21,17,0,0" Stroke="Black" VerticalAlignment="Top" Width="281"/>
+        <Slider x:Name="joint1" HorizontalAlignment="Left" Margin="44,28,0,0" Width="210" VerticalAlignment="Top" Maximum="110" Minimum="-110" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
+        <Slider x:Name="joint2" HorizontalAlignment="Left" Margin="44,64,0,0"  Width="210" VerticalAlignment="Top"  Maximum="120" Minimum="-120" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
+        <Slider x:Name="joint3" HorizontalAlignment="Left" Margin="44,102,0,0" VerticalAlignment="Top" Width="210"  Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" Height="19" />
+        <Slider x:Name="joint4" HorizontalAlignment="Left" Margin="44,141,0,0" VerticalAlignment="Top" Width="210"  Maximum="180" Minimum="-180" ValueChanged="joint_ValueChanged" LargeChange="0.1" TickFrequency="0.1" />
+        <Label Content="J1" HorizontalAlignment="Left" Margin="25,23,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="J1Value" Content="{Binding Value, ElementName=joint1}" FontSize="14" HorizontalAlignment="Left" Margin="248,23,0,0" VerticalAlignment="Top" Height="27" Width="54" RenderTransformOrigin="0.465,0.16"/>
+        <Label Content="J2" HorizontalAlignment="Left" Margin="25,59,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="J2Value" Content="{Binding Value, ElementName=joint2}" FontSize="14" HorizontalAlignment="Left" Margin="248,59,0,0" VerticalAlignment="Top" Height="27" Width="54" RenderTransformOrigin="0.465,0.16"/>
+        <Label Content="J3" HorizontalAlignment="Left" Margin="25,98,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="J3Value" Content="{Binding Value, ElementName=joint3}" FontSize="14" HorizontalAlignment="Left" Margin="249,98,0,0" VerticalAlignment="Top" Height="27" Width="53" RenderTransformOrigin="0.465,0.16"/>
+        <Label Content="J4" HorizontalAlignment="Left" Margin="25,136,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="J4Value" Content="{Binding Value, ElementName=joint4}" FontSize="14" HorizontalAlignment="Left" Margin="249,136,0,0" VerticalAlignment="Top" Height="27" Width="53" RenderTransformOrigin="0.465,0.16"/>
+        <Label Content="X" HorizontalAlignment="Left" Margin="26,168,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="Tx" HorizontalAlignment="Left" Margin="47,168,0,0" VerticalAlignment="Top" Foreground="Black" Height="25" Width="63" ContentStringFormat="{}{0:0.##}" Content="400"/>
+        <Label Content="Y" HorizontalAlignment="Left" Margin="114,168,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="Ty" HorizontalAlignment="Left" Margin="137,168,0,0" VerticalAlignment="Top" Foreground="Black" Height="25" Width="63" ContentStringFormat="{}{0:0.##}" Content="0"/>
+        <Label Content="Z" HorizontalAlignment="Left" Margin="209,168,0,0" VerticalAlignment="Top" Height="27" Width="22"/>
+        <Label x:Name="Tz" HorizontalAlignment="Left" Margin="229,168,0,0" VerticalAlignment="Top" Foreground="Black" Height="25" Width="63" ContentStringFormat="{}{0:0.##}" Content="223.5"/>
     </Grid>
 </Window>

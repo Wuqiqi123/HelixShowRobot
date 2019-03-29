@@ -37,7 +37,7 @@ namespace HelixSCARA
             model = pModel;
         }
     }
-    class ForceData
+    public class ForceData
     {
         public double FX = 0;
         public double FY = 0;
@@ -415,7 +415,7 @@ namespace HelixSCARA
             oldColor = changeModelColor(oldSelectedModel, ColorHelper.HexToColor("#ff3333"));
         }
 
-        public Vector3D ForwardKinematics(double[] angles)
+        public Vector3D ForwardKinematics(double[] angles,ForceData ShowForceData)
         {
 
             F1 = new Transform3DGroup();
@@ -484,6 +484,10 @@ namespace HelixSCARA
             AxisY.Transform = F4;
             AxisZ.Transform = F4;
 
+
+            Tx.Content = EndPosition.X;
+            Ty.Content = EndPosition.Y;
+            Tz.Content = EndPosition.Z;
             return new Vector3D(EndPosition.X,EndPosition.Y,EndPosition.Z);
         }
 
@@ -504,7 +508,8 @@ namespace HelixSCARA
             /** Debug sphere, it takes the x,y,z of the textBoxes and update its position
              * This is useful when using x,y,z in the "new Point3D(x,y,z)* when defining a new RotateTransform3D() to check where the joints is actually  rotating */
             double[] angles = { joints[0].angle, joints[1].angle, joints[2].angle, joints[3].angle};
-            ForwardKinematics(angles);
+            ForceData tempF = new ForceData(0, 0, 0, 0, 0, 0);
+            ForwardKinematics(angles, tempF);
             //updateSpherePosition();
         }
 
