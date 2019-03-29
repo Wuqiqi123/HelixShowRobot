@@ -146,9 +146,9 @@ namespace HelixSCARA
             viewPort3d.PanGesture = new MouseGesture(MouseAction.LeftClick);
             viewPort3d.Children.Add(ForceSystem);
             viewPort3d.Children.Add(RoboticArm);
-            viewPort3d.Camera.LookDirection = new Vector3D(-1077, 1684, -877);
-            viewPort3d.Camera.UpDirection = new Vector3D(0.248, -0.390, 0.887);
-            viewPort3d.Camera.Position = new Point3D(1620, -1753, 1355);
+            viewPort3d.Camera.LookDirection = new Vector3D(-862.674, 1144.325, -664.861);
+            viewPort3d.Camera.UpDirection = new Vector3D(0.267, -0.355, 0.896);
+            viewPort3d.Camera.Position = new Point3D(1147.73, -1353.113, 1086.891);
            
 
             ///////////////////////////////////
@@ -158,11 +158,11 @@ namespace HelixSCARA
         private Model3DGroup Initialize_ForceSystem()
         {
             List<MeshBuilder> builder = new List<MeshBuilder>();
-            var OriPosition = new Point3D(318.8, 44.29, 356.75);
+            var OriPosition = new Point3D(400, 0, 223.5);
             List<Point3D> ForceCoordinateSystem = new List<Point3D>();
             FD = new ForceData(OriPosition.X + 100, OriPosition.Y + 100, OriPosition.Z + 100, OriPosition.X -100, OriPosition.Y -100, OriPosition.Z -100);
 
-            var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);
+            var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);   //力传感器坐标系的轴坐标系方向与机器人坐标系定义不同
             var FAxisY = new Point3D(OriPosition.X +100, OriPosition.Y + 0, OriPosition.Z + 0);
             var FAxisZ = new Point3D(OriPosition.X + 0, OriPosition.Y + 0, OriPosition.Z - 100);
             ForceCoordinateSystem.Add(FAxisX);
@@ -170,7 +170,7 @@ namespace HelixSCARA
             ForceCoordinateSystem.Add(FAxisZ);
 
             builder.Add(new MeshBuilder(true,true));
-            builder[0].AddSphere(OriPosition, 10);
+            builder[0].AddSphere(OriPosition, 1);
             EndOrigin = new GeometryModel3D(builder[0].ToMesh(), Materials.Brown);
             FS.Children.Add(EndOrigin);
 
@@ -190,12 +190,12 @@ namespace HelixSCARA
             FS.Children.Add(AxisZ);
 
             builder.Add(new MeshBuilder(true, true));
-            builder[4].AddArrow(OriPosition, new Point3D(FD.FX, FD.FY, FD.FZ), 5);
+            builder[4].AddArrow(OriPosition, new Point3D(FD.FX, FD.FY, FD.FZ), 3);
             ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
             FS.Children.Add(ForceModel);
 
             builder.Add(new MeshBuilder(true, true));
-            builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 5);
+            builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 3);
             TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
             FS.Children.Add(TorqueModel);
 
@@ -240,41 +240,41 @@ namespace HelixSCARA
                 changeModelColor(joints[4], Colors.Yellow);
 
 
-                joints[0].angleMin = -120;
-                joints[0].angleMax = 120;
+                joints[0].angleMin = -110;
+                joints[0].angleMax = 110;
                 joints[0].rotAxisX = 0;
                 joints[0].rotAxisY = 0;
                 joints[0].rotAxisZ = 1;
-                joints[0].rotPointX = -81.20;
-                joints[0].rotPointY = 44.29;
-                joints[0].rotPointZ = 133.25;
+                joints[0].rotPointX = 0;
+                joints[0].rotPointY = 0;
+                joints[0].rotPointZ = 100;   //no use
 
-                joints[1].angleMin = -150;
-                joints[1].angleMax = 150;
+                joints[1].angleMin = -120;
+                joints[1].angleMax = 120;
                 joints[1].rotAxisX = 0;
                 joints[1].rotAxisY = 0;
                 joints[1].rotAxisZ = 1;
-                joints[1].rotPointX = 168.80;
-                joints[1].rotPointY = 44.29;
-                joints[1].rotPointZ = 343.5;
+                joints[1].rotPointX = 250;
+                joints[1].rotPointY = 0;
+                joints[1].rotPointZ = 100;   //no use
 
-                joints[2].angleMin = -100;
-                joints[2].angleMax = 100;
+                joints[2].angleMin = -110;    //linear movement
+                joints[2].angleMax = 110;
                 joints[2].rotAxisX = 0;
                 joints[2].rotAxisY = 0;
                 joints[2].rotAxisZ = 1;
-                joints[2].rotPointX = 318.8;
-                joints[2].rotPointY = 44.29;
-                joints[2].rotPointZ = 506.75;
+                joints[2].rotPointX = 400;
+                joints[2].rotPointY = 0;
+                joints[2].rotPointZ = 100;
 
-                joints[3].angleMin = -180;
-                joints[3].angleMax = 180;
+                joints[3].angleMin = -360;
+                joints[3].angleMax = 360;
                 joints[3].rotAxisX = 0;
                 joints[3].rotAxisY = 0;
                 joints[3].rotAxisZ = 1;
-                joints[3].rotPointX = 318.8;
-                joints[3].rotPointY = 44.29;
-                joints[3].rotPointZ = 386.75;
+                joints[3].rotPointX = 400;
+                joints[3].rotPointY = 0;
+                joints[3].rotPointZ = 100;    //no use
 
             }
             catch (Exception e)
@@ -420,7 +420,6 @@ namespace HelixSCARA
 
             F1 = new Transform3DGroup();
             T = new TranslateTransform3D();
-            // T = new TranslateTransform3D(joints[0].rotPointX, joints[0].rotPointY, joints[0].rotPointZ);
             R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[0].rotAxisX, joints[0].rotAxisY, joints[0].rotAxisZ), angles[0]), new Point3D(joints[0].rotPointX, joints[0].rotPointY, joints[0].rotPointZ));
             F1.Children.Add(R);
             F1.Children.Add(T);
@@ -464,15 +463,15 @@ namespace HelixSCARA
             ///////////////////////////////////////////////////////////
             FS.Children.Remove(ForceModel);
             MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
-            meshBuilderForce.AddArrow(EndPosition, new Point3D(300,700,300), 8);
+            meshBuilderForce.AddArrow(EndPosition, new Point3D(300,700,300), 5);
             ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
             FS.Children.Add(ForceModel);
 
 
             FS.Children.Remove(TorqueModel);
             MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
-            meshBuilderTorque.AddArrow(EndPosition, new Point3D(700, 300, 300), 8);
-            TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Violet);
+            meshBuilderTorque.AddArrow(EndPosition, new Point3D(700, 300, 300), 5);
+            TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
             FS.Children.Add(TorqueModel);
 
             ////////////////////////////////////////////////////////
