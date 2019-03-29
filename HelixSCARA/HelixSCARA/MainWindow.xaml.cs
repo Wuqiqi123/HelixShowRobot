@@ -189,15 +189,15 @@ namespace HelixSCARA
             AxisZ = new GeometryModel3D(builder[3].ToMesh(), Materials.Blue);
             FS.Children.Add(AxisZ);
 
-            //builder.Add(new MeshBuilder(true, true));
-            //builder[4].AddArrow(OriPosition, new Point3D(FD.FX,FD.FY,FD.FZ), 5);
-            //ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
-            //FS.Children.Add(ForceModel);
+            builder.Add(new MeshBuilder(true, true));
+            builder[4].AddArrow(OriPosition, new Point3D(FD.FX, FD.FY, FD.FZ), 5);
+            ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
+            FS.Children.Add(ForceModel);
 
-            //builder.Add(new MeshBuilder(true, true));
-            //builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 5);
-            //TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
-            //FS.Children.Add(TorqueModel);
+            builder.Add(new MeshBuilder(true, true));
+            builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 5);
+            TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
+            FS.Children.Add(TorqueModel);
 
             return FS;
         }
@@ -455,26 +455,27 @@ namespace HelixSCARA
             F4.Children.Add(R);
             F4.Children.Add(F3);
 
-            /////力的F的显示
-            F5 = new Transform3DGroup();
-            T = new TranslateTransform3D(0, 0, 0); 
-            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[3].rotAxisX, joints[3].rotAxisY, joints[3].rotAxisZ), angles[3]), new Point3D(joints[3].rotPointX, joints[3].rotPointY, joints[3].rotPointZ));
-            F5.Children.Add(T);
-            F5.Children.Add(R);
-            F5.Children.Add(F4);
-
-
-            F6 = new Transform3DGroup();
-            T = new TranslateTransform3D(0, 0, 0); 
-            R = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(joints[3].rotAxisX, joints[3].rotAxisY, joints[3].rotAxisZ), angles[3]), new Point3D(joints[3].rotPointX, joints[3].rotPointY, joints[3].rotPointZ));
-            F6.Children.Add(T);
-            F6.Children.Add(R);
-            F6.Children.Add(F4);
+            
             //NB: I was having a nightmare trying to understand why it was always rotating in a weird way... SO I realized that the order in which
             //you add the Children is actually VERY IMPORTANT in fact before I was applyting F and then T and R, but the previous transformation
-            //Should always be applied as last (FORWARD Kinematics)
+            //Should always be applied as last (FORWARD Kinematics)   
+            //////重新画力传感器坐标
+            var EndPosition = new Point3D(EndOrigin.Bounds.Location.X, EndOrigin.Bounds.Location.Y, EndOrigin.Bounds.Location.Z);
+            ///////////////////////////////////////////////////////////
+            FS.Children.Remove(ForceModel);
+            MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
+            meshBuilderForce.AddArrow(EndPosition, new Point3D(300,700,300), 8);
+            ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
+            FS.Children.Add(ForceModel);
 
 
+            FS.Children.Remove(TorqueModel);
+            MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
+            meshBuilderTorque.AddArrow(EndPosition, new Point3D(700, 300, 300), 8);
+            TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Violet);
+            FS.Children.Add(TorqueModel);
+
+            ////////////////////////////////////////////////////////
             joints[0].model.Transform = F1; //First joint
             joints[1].model.Transform = F2; //Second joint (the "biceps")
             joints[2].model.Transform = F3; //movemet joint 
@@ -484,10 +485,7 @@ namespace HelixSCARA
             AxisY.Transform = F4;
             AxisZ.Transform = F4;
 
-
-
-
-            return new Vector3D(joints[3].model.Bounds.Location.X, joints[3].model.Bounds.Location.Y, joints[3].model.Bounds.Location.Z);
+            return new Vector3D(EndPosition.X,EndPosition.Y,EndPosition.Z);
         }
 
         private void joint_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
