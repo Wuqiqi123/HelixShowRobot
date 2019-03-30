@@ -16,10 +16,14 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Threading;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 
 namespace HelixSCARA
 {
-    class Joint
+    public delegate void Entrust();
+    public class Joint
     {
         public Model3D model = null;
         public double angle = 0;
@@ -37,6 +41,7 @@ namespace HelixSCARA
             model = pModel;
         }
     }
+
     public class ForceData
     {
         public double FX = 0;
@@ -58,7 +63,7 @@ namespace HelixSCARA
 
     [Serializable] // 指示可序列化
     [StructLayout(LayoutKind.Sequential, Pack = 1)] // 按1字节对齐
-    struct RobotData
+    public struct RobotData
     {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] // 声明一个字符数组，大小为4*8
         public  double[] JointsNow;
@@ -93,6 +98,7 @@ namespace HelixSCARA
         Model3D AxisY = null;
         Model3D AxisZ = null;
         Model3D EndOrigin = null;
+        Point3D OriPosition;
         Model3D ForceModel = null;
         Model3D TorqueModel = null;
         ForceData FD = null;
@@ -116,6 +122,7 @@ namespace HelixSCARA
         TranslateTransform3D Tran_2;
 
         //////////////
+        System.Windows.Threading.DispatcherTimer dtimer;
 
         /// <summary>
 
@@ -153,12 +160,40 @@ namespace HelixSCARA
 
             ///////////////////////////////////
 
-            ConnetServer(); 
+            ConnetServer();
+
+            ////////////
+            ///                dtimer = new System.Windows.Threading.DispatcherTimer();
+            if (dtimer == null)
+            {
+                dtimer = new System.Windows.Threading.DispatcherTimer();
+                dtimer.Interval = TimeSpan.FromSeconds(0.018);
+                dtimer.Tick += dtimer_Tick;
+                dtimer.Start();
+            }
+
+        }
+
+        void dtimer_Tick(object sender, EventArgs e)
+        {
+            execute_fk();
+        }
+
+
+        public static object CloneObject(object obj)
+        {
+            using (MemoryStream memStream = new MemoryStream())
+            {
+                BinaryFormatter binaryFormatter = new BinaryFormatter(null, new StreamingContext(StreamingContextStates.Clone));
+                binaryFormatter.Serialize(memStream, obj);
+                memStream.Seek(0, SeekOrigin.Begin);
+                return binaryFormatter.Deserialize(memStream);
+            }
         }
         private Model3DGroup Initialize_ForceSystem()
         {
             List<MeshBuilder> builder = new List<MeshBuilder>();
-            var OriPosition = new Point3D(400, 0, 223.5);
+             OriPosition = new Point3D(400, 0, 223.5);
             List<Point3D> ForceCoordinateSystem = new List<Point3D>();
             FD = new ForceData(OriPosition.X + 100, OriPosition.Y + 100, OriPosition.Z + 100, OriPosition.X -100, OriPosition.Y -100, OriPosition.Z -100);
 
@@ -286,36 +321,47 @@ namespace HelixSCARA
         //连接服务器
         public void ConnetServer()
         {
-            if (client == null) client = new Client(ClientPrint, "127.0.0.1", "8888");
+            if (client == null)
+            {
+                Entrust callback = new Entrust(CallBack); //把方法赋值给委托
+                client = new Client(callback,"127.0.0.1", "8888");
+                client.print += new myPrint(ClientPrint);
+               
+            }
             if (!client.connected) client.start();
            // if (client != null) thi = "客户端 " + client.localIpPort;
         }
 
         //调试的时候打印显示信息
 
-        private void ClientPrint(RobotData? info)
+        public void ClientPrint(RobotData? info)
         {
             RobotData robot = info.Value;
-
+             //= CloneObject(object robot);
+     
             joints[0].angle = robot.JointsNow[0];
             joints[1].angle = robot.JointsNow[1];
             joints[2].angle = robot.JointsNow[2];
             joints[3].angle = robot.JointsNow[3];
+            FD.FX = robot.Origin6axisForce[0];
+            FD.FY = robot.Origin6axisForce[1];
+            FD.FZ = robot.Origin6axisForce[2];
+            FD.MX = robot.Origin6axisForce[3];
+            FD.MY = robot.Origin6axisForce[4];
+            FD.MZ = robot.Origin6axisForce[5];
 
-            double a = robot.JointsNow[0];
-            //double b = robot.CartesianPositionNow[1];
-            double c = robot.JointsNow[2];
-            //double d = robot.JointsNow[3];
-            //double e = robot.JointsTorque[0];
+            //double a = robot.JointsNow[0];
+            ////double b = robot.CartesianPositionNow[1]
+            //System.Diagnostics.Debug.WriteLine(a);
+            //execute_fk();
+        }
 
-            System.Diagnostics.Debug.WriteLine(a);
-            System.Diagnostics.Debug.WriteLine('\n');
-            System.Diagnostics.Debug.WriteLine(c);
-            System.Diagnostics.Debug.WriteLine('\n');
-            //System.Diagnostics.Debug.WriteLine(b);
-            //System.Diagnostics.Debug.WriteLine('\n');
+        public void CallBack()
+        {
+            //不能使用没有用
             execute_fk();
         }
+
 
         //将sockct接受的字符转化成Robot对象
         public static T ByteArrayToStructure<T>(byte[] bytes) where T : struct    //where表示约束，只能为struct
@@ -422,7 +468,7 @@ namespace HelixSCARA
             oldColor = changeModelColor(oldSelectedModel, ColorHelper.HexToColor("#ff3333"));
         }
 
-        public Vector3D ForwardKinematics(double[] angles,ForceData ShowForceData)
+        public Vector3D ForwardKinematics(double[] angles,double[] tempF )
         {
 
             F1 = new Transform3DGroup();
@@ -466,18 +512,20 @@ namespace HelixSCARA
             //you add the Children is actually VERY IMPORTANT in fact before I was applyting F and then T and R, but the previous transformation
             //Should always be applied as last (FORWARD Kinematics)   
             //////重新画力传感器坐标
-            var EndPosition = new Point3D(EndOrigin.Bounds.Location.X, EndOrigin.Bounds.Location.Y, EndOrigin.Bounds.Location.Z);
+            Point3D EndPosition = new Point3D(EndOrigin.Bounds.Location.X, EndOrigin.Bounds.Location.Y, EndOrigin.Bounds.Location.Z);
             ///////////////////////////////////////////////////////////
             FS.Children.Remove(ForceModel);
             MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
-            meshBuilderForce.AddArrow(EndPosition, new Point3D(300,700,300), 5);
+            Point3D F = new Point3D(tempF[1]+ OriPosition.X, tempF[0]+ OriPosition.Y, -tempF[2]+ OriPosition.Z);
+            meshBuilderForce.AddArrow(OriPosition, F, 5);
             ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
             FS.Children.Add(ForceModel);
 
 
             FS.Children.Remove(TorqueModel);
             MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
-            meshBuilderTorque.AddArrow(EndPosition, new Point3D(700, 300, 300), 5);
+            Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
+            meshBuilderTorque.AddArrow(OriPosition, M, 5);
             TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
             FS.Children.Add(TorqueModel);
 
@@ -490,7 +538,8 @@ namespace HelixSCARA
             AxisX.Transform = F4;
             AxisY.Transform = F4;
             AxisZ.Transform = F4;
-
+            ForceModel.Transform = F4;
+            TorqueModel.Transform = F4;
 
             Tx.Content = EndPosition.X;
             Ty.Content = EndPosition.Y;
@@ -515,7 +564,7 @@ namespace HelixSCARA
             /** Debug sphere, it takes the x,y,z of the textBoxes and update its position
              * This is useful when using x,y,z in the "new Point3D(x,y,z)* when defining a new RotateTransform3D() to check where the joints is actually  rotating */
             double[] angles = { joints[0].angle, joints[1].angle, joints[2].angle, joints[3].angle};
-            ForceData tempF = new ForceData(0, 0, 0, 0, 0, 0);
+            double[] tempF = { FD.FX, FD.FY , FD.FZ , FD.MX ,FD.MY ,FD.MZ };
             ForwardKinematics(angles, tempF);
             //updateSpherePosition();
         }

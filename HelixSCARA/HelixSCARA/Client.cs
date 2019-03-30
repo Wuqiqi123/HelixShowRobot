@@ -9,25 +9,28 @@ using System.Threading;
 
 namespace HelixSCARA
 {
+    public delegate void myPrint(RobotData? info);// 运行时的信息输出方法,委托的函数名
     class Client
     {
         public string ipString = "127.0.0.1";   // 服务器端ip
         public int port = 8888;                // 服务器端口
         public Socket socket;
-        public Print print;                     // 运行时的信息输出方法,委托的函数名
+        public event myPrint print;                     // 运行时的信息输出方法,委托的函数名
         public bool connected = false;          // 标识当前是否连接到服务器
         public string localIpPort = "";         // 记录本地ip端口信息
-        public delegate void Print(RobotData? info);// 运行时的信息输出方法,委托的函数名
-        public Client(Print print = null, string ipString = null, int port = -1)
+        Entrust callback;
+        public Client(Entrust callb,string ipString = null, int port = -1)
         {
-            this.print = print;
+            //print = new myPrintPrint(print1);
+             this.callback = callb;
             if (ipString != null) this.ipString = ipString;
             if (port >= 0) this.port = port;
         }
 
-        public Client(Print print = null, string ipString = null, string port = "-1")
+        public Client(Entrust callb,string ipString = null, string port = "-1")
         {
-            this.print = print;
+            //   print = new Print(print1);
+            this.callback = callb;
             if (ipString != null) this.ipString = ipString;
 
             int port_int = Int32.Parse(port);
@@ -108,7 +111,7 @@ namespace HelixSCARA
         /// <summary>
         /// 通过socket发送数据data
         /// </summary>
-        private void Send(Socket socket, string data)
+        public void Send(Socket socket, string data)
         {
             if (socket != null && data != null && !data.Equals(""))
             {
@@ -120,10 +123,10 @@ namespace HelixSCARA
         /// <summary>
         /// 接收通过socket发送过来的数据
         /// </summary>
-        private void receiveData(object socket)
+        public void receiveData(object socket)
         {
             Socket ortherSocket = (Socket)socket;
-
+            
             while (true)
             {
                 try
@@ -132,7 +135,10 @@ namespace HelixSCARA
                     if (data!=null)
                     {
                         //if (print != null) print("服务器" + ortherSocket.RemoteEndPoint.ToString() + "信息：\r\n" + data);
-                        if (print != null) print(data);
+                        if (print != null) {
+                            print(data);
+                          //  callback();
+                        }
                         if (data.Equals("[.Shutdown]")) System.Environment.Exit(0);
                     }
                 }
@@ -145,13 +151,13 @@ namespace HelixSCARA
                     break;
                 }
                 if (!connected) break;
-                Thread.Sleep(70);      // 延时70ms后处理接收到的信息
+                //Thread.Sleep(70);      // 延时70ms后处理接收到的信息
             }
         }
         /// <summary>
         /// 从socket接收数据
         /// </summary>
-        private RobotData? Receive(Socket socket)
+        public RobotData? Receive(Socket socket)
         {
             string data = "";
 
