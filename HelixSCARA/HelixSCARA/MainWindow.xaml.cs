@@ -123,7 +123,7 @@ namespace HelixSCARA
 
         //////////////
         System.Windows.Threading.DispatcherTimer dtimer;
-
+        bool IsFirstFlag=true;
         /// <summary>
 
         private const string MODEL_PATH1 = "SCARA_Robot - Link1-1.STL";
@@ -195,7 +195,7 @@ namespace HelixSCARA
             List<MeshBuilder> builder = new List<MeshBuilder>();
              OriPosition = new Point3D(400, 0, 223.5);
             List<Point3D> ForceCoordinateSystem = new List<Point3D>();
-            FD = new ForceData(OriPosition.X + 100, OriPosition.Y + 100, OriPosition.Z + 100, OriPosition.X -100, OriPosition.Y -100, OriPosition.Z -100);
+            FD = new ForceData(OriPosition.X + 30, OriPosition.Y - 10, OriPosition.Z + 10, OriPosition.X -10, OriPosition.Y -10, OriPosition.Z -10);
 
             var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);   //力传感器坐标系的轴坐标系方向与机器人坐标系定义不同
             var FAxisY = new Point3D(OriPosition.X +100, OriPosition.Y + 0, OriPosition.Z + 0);
@@ -205,7 +205,7 @@ namespace HelixSCARA
             ForceCoordinateSystem.Add(FAxisZ);
 
             builder.Add(new MeshBuilder(true,true));
-            builder[0].AddSphere(OriPosition, 1);
+            builder[0].AddSphere(OriPosition, 0.001);
             EndOrigin = new GeometryModel3D(builder[0].ToMesh(), Materials.Brown);
             FS.Children.Add(EndOrigin);
 
@@ -349,7 +349,7 @@ namespace HelixSCARA
             FD.MX = robot.Origin6axisForce[3];
             FD.MY = robot.Origin6axisForce[4];
             FD.MZ = robot.Origin6axisForce[5];
-
+            IsFirstFlag = false;
             //double a = robot.JointsNow[0];
             ////double b = robot.CartesianPositionNow[1]
             //System.Diagnostics.Debug.WriteLine(a);
@@ -541,9 +541,18 @@ namespace HelixSCARA
             ForceModel.Transform = F4;
             TorqueModel.Transform = F4;
 
-            Tx.Content = EndPosition.X;
-            Ty.Content = EndPosition.Y;
-            Tz.Content = EndPosition.Z;
+            if(IsFirstFlag)  //发现第一此运行的时候并不是
+            {
+                Tx.Content = 400;
+                Ty.Content = 0;
+                Tz.Content = 223.5;
+            }
+            else
+            {
+                Tx.Content = EndPosition.X;
+                Ty.Content = EndPosition.Y;
+                Tz.Content = EndPosition.Z;
+            }
             return new Vector3D(EndPosition.X,EndPosition.Y,EndPosition.Z);
         }
 
@@ -554,6 +563,7 @@ namespace HelixSCARA
             joints[1].angle = joint2.Value;
             joints[2].angle = joint3.Value;
             joints[3].angle = joint4.Value;
+            IsFirstFlag = false;
             execute_fk();
         }
         /**
