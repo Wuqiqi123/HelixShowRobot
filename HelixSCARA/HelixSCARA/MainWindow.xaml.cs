@@ -507,28 +507,30 @@ namespace HelixSCARA
             F4.Children.Add(R);
             F4.Children.Add(F3);
 
-            
+
             //NB: I was having a nightmare trying to understand why it was always rotating in a weird way... SO I realized that the order in which
             //you add the Children is actually VERY IMPORTANT in fact before I was applyting F and then T and R, but the previous transformation
             //Should always be applied as last (FORWARD Kinematics)   
-            //////重新画力传感器坐标
             Point3D EndPosition = new Point3D(EndOrigin.Bounds.Location.X, EndOrigin.Bounds.Location.Y, EndOrigin.Bounds.Location.Z);
-            ///////////////////////////////////////////////////////////
-            FS.Children.Remove(ForceModel);
-            MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
-            Point3D F = new Point3D(tempF[1]+ OriPosition.X, tempF[0]+ OriPosition.Y, -tempF[2]+ OriPosition.Z);
-            meshBuilderForce.AddArrow(OriPosition, F, 5);
-            ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
-            FS.Children.Add(ForceModel);
+            if (!IsFirstFlag)  //不是第一次运行这个
+            {
+                //////重新画力传感器坐标
+                ///////////////////////////////////////////////////////////
+                FS.Children.Remove(ForceModel);
+                MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
+                Point3D F = new Point3D(tempF[1] + OriPosition.X, tempF[0] + OriPosition.Y, -tempF[2] + OriPosition.Z);
+                meshBuilderForce.AddArrow(OriPosition, F, 5);
+                ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
+                FS.Children.Add(ForceModel);
 
 
-            FS.Children.Remove(TorqueModel);
-            MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
-            Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
-            meshBuilderTorque.AddArrow(OriPosition, M, 5);
-            TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
-            FS.Children.Add(TorqueModel);
-
+                FS.Children.Remove(TorqueModel);
+                MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
+                Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
+                meshBuilderTorque.AddArrow(OriPosition, M, 5);
+                TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
+                FS.Children.Add(TorqueModel);
+            }
             ////////////////////////////////////////////////////////
             joints[0].model.Transform = F1; //First joint
             joints[1].model.Transform = F2; //Second joint (the "biceps")
