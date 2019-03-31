@@ -195,7 +195,7 @@ namespace HelixSCARA
             List<MeshBuilder> builder = new List<MeshBuilder>();
              OriPosition = new Point3D(400, 0, 223.5);
             List<Point3D> ForceCoordinateSystem = new List<Point3D>();
-            FD = new ForceData(OriPosition.X + 30, OriPosition.Y - 10, OriPosition.Z + 10, OriPosition.X -10, OriPosition.Y -10, OriPosition.Z -10);
+            FD = new ForceData(OriPosition.X , OriPosition.Y , OriPosition.Z , OriPosition.X , OriPosition.Y , OriPosition.Z );
 
             var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);   //力传感器坐标系的轴坐标系方向与机器人坐标系定义不同
             var FAxisY = new Point3D(OriPosition.X +100, OriPosition.Y + 0, OriPosition.Z + 0);
@@ -541,7 +541,7 @@ namespace HelixSCARA
             ForceModel.Transform = F4;
             TorqueModel.Transform = F4;
 
-            if(IsFirstFlag)  //发现第一此运行的时候并不是
+            if(IsFirstFlag)  //发现第一此运行的时候
             {
                 Tx.Content = 400;
                 Ty.Content = 0;
