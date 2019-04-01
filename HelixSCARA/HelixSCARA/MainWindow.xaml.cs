@@ -343,12 +343,12 @@ namespace HelixSCARA
             joints[1].angle = robot.JointsNow[1];
             joints[2].angle = robot.JointsNow[2];
             joints[3].angle = robot.JointsNow[3];
-            FD.FX = robot.Origin6axisForce[0];
-            FD.FY = robot.Origin6axisForce[1];
-            FD.FZ = robot.Origin6axisForce[2];
-            FD.MX = robot.Origin6axisForce[3];
-            FD.MY = robot.Origin6axisForce[4];
-            FD.MZ = robot.Origin6axisForce[5];
+            FD.FX = robot.Origin6axisForce[0]*30;   //把收到的力放大30倍来显示
+            FD.FY = robot.Origin6axisForce[1]*30;
+            FD.FZ = robot.Origin6axisForce[2]*30;
+            FD.MX = robot.Origin6axisForce[3]*30;
+            FD.MY = robot.Origin6axisForce[4]*30;
+            FD.MZ = robot.Origin6axisForce[5]*30;
             IsFirstFlag = false;
             //double a = robot.JointsNow[0];
             ////double b = robot.CartesianPositionNow[1]
@@ -518,15 +518,17 @@ namespace HelixSCARA
                 ///////////////////////////////////////////////////////////
                 FS.Children.Remove(ForceModel);
                 MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
-                Point3D F = new Point3D(tempF[1] + OriPosition.X, tempF[0] + OriPosition.Y, -tempF[2] + OriPosition.Z);
+
+                ///////使用力相对于世界坐标坐标系，而不是相对于力传感器自身
+                Point3D F = new Point3D(tempF[0] + OriPosition.X, tempF[1] + OriPosition.Y, tempF[2] + OriPosition.Z);
                 meshBuilderForce.AddArrow(OriPosition, F, 5);
                 ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
                 FS.Children.Add(ForceModel);
 
-
+                ///////使用力矩相对于世界坐标坐标系，而不是相对于力传感器自身
                 FS.Children.Remove(TorqueModel);
                 MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
-                Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
+                Point3D M = new Point3D(tempF[3] + OriPosition.X, tempF[4] + OriPosition.Y, tempF[5] + OriPosition.Z);
                 meshBuilderTorque.AddArrow(OriPosition, M, 5);
                 TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
                 FS.Children.Add(TorqueModel);
