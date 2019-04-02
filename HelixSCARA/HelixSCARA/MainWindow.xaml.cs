@@ -131,12 +131,22 @@ namespace HelixSCARA
         private const string MODEL_PATH3 = "SCARA_Robot - Move-1.STL";
         private const string MODEL_PATH4 = "SCARA_Robot - Rot-1.STL";
         private const string MODEL_PATH5 = "SCARA_Robot - Base-1.STL";
+        /// <summary>
+        /// ////
+        /// </summary>
 
+        int ForceShowMode = 0;  //0是绝对坐标系，1是相对坐标系
         /// </summary>
         Client client;    // 客户端实例
         public MainWindow()
         {
             InitializeComponent();
+            rbabsolute.Checked += new RoutedEventHandler(radio_Checked);
+            rbrelative.Checked += new RoutedEventHandler(radio_Checked);
+
+        //    rbabsolute.Unchecked += new RoutedEventHandler(radio_Unchecked);
+          //  rbrelative.Unchecked += new RoutedEventHandler(radio_Unchecked);
+
             basePath = Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName) + "\\Models\\";
             List<string> modelsNames = new List<string>();
             modelsNames.Add(MODEL_PATH1);
@@ -167,7 +177,7 @@ namespace HelixSCARA
             if (dtimer == null)
             {
                 dtimer = new System.Windows.Threading.DispatcherTimer();
-                dtimer.Interval = TimeSpan.FromSeconds(0.018);
+                dtimer.Interval = TimeSpan.FromSeconds(0.02);
                 dtimer.Tick += dtimer_Tick;
                 dtimer.Start();
             }
@@ -195,7 +205,8 @@ namespace HelixSCARA
             List<MeshBuilder> builder = new List<MeshBuilder>();
              OriPosition = new Point3D(400, 0, 223.5);
             List<Point3D> ForceCoordinateSystem = new List<Point3D>();
-            FD = new ForceData(OriPosition.X , OriPosition.Y , OriPosition.Z , OriPosition.X , OriPosition.Y , OriPosition.Z );
+            //  FD = new ForceData(OriPosition.X , OriPosition.Y , OriPosition.Z , OriPosition.X , OriPosition.Y , OriPosition.Z );
+            FD = new ForceData(0, 0,0,0, 0, 0);
 
             var FAxisX = new Point3D(OriPosition.X + 0, OriPosition.Y + 100, OriPosition.Z + 0);   //力传感器坐标系的轴坐标系方向与机器人坐标系定义不同
             var FAxisY = new Point3D(OriPosition.X +100, OriPosition.Y + 0, OriPosition.Z + 0);
@@ -224,15 +235,17 @@ namespace HelixSCARA
             AxisZ = new GeometryModel3D(builder[3].ToMesh(), Materials.Blue);
             FS.Children.Add(AxisZ);
 
-            builder.Add(new MeshBuilder(true, true));
-            builder[4].AddArrow(OriPosition, new Point3D(FD.FX, FD.FY, FD.FZ), 3);
-            ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
-            FS.Children.Add(ForceModel);
 
-            builder.Add(new MeshBuilder(true, true));
-            builder[5].AddArrow(OriPosition, new Point3D(FD.MX, FD.MY, FD.MZ), 3);
-            TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
-            FS.Children.Add(TorqueModel);
+                builder.Add(new MeshBuilder(true, true));
+                builder[4].AddArrow(OriPosition, OriPosition, 3);
+                ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
+                FS.Children.Add(ForceModel);
+
+                builder.Add(new MeshBuilder(true, true));
+                builder[5].AddArrow(OriPosition, OriPosition, 3);
+                TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
+                FS.Children.Add(TorqueModel);
+
 
             return FS;
         }
@@ -519,19 +532,38 @@ namespace HelixSCARA
                 FS.Children.Remove(ForceModel);
                 MeshBuilder meshBuilderForce = new MeshBuilder(true, true);
 
-                ///////使用力相对于世界坐标坐标系，而不是相对于力传感器自身
-                Point3D F = new Point3D(tempF[0] + OriPosition.X, tempF[1] + OriPosition.Y, tempF[2] + OriPosition.Z);
-                meshBuilderForce.AddArrow(OriPosition, F, 5);
-                ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
-                FS.Children.Add(ForceModel);
+                if(ForceShowMode==0)   //相对于绝对坐标系
+                {
+                    ///////使用力相对于世界坐标坐标系，而不是相对于力传感器自身
+                    Point3D F = new Point3D(tempF[0] + EndPosition.X, tempF[1] + EndPosition.Y, tempF[2] + EndPosition.Z);
+                    meshBuilderForce.AddArrow(EndPosition, F, 5);
+                    ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
+                    FS.Children.Add(ForceModel);
 
-                ///////使用力矩相对于世界坐标坐标系，而不是相对于力传感器自身
-                FS.Children.Remove(TorqueModel);
-                MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
-                Point3D M = new Point3D(tempF[3] + OriPosition.X, tempF[4] + OriPosition.Y, tempF[5] + OriPosition.Z);
-                meshBuilderTorque.AddArrow(OriPosition, M, 5);
-                TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
-                FS.Children.Add(TorqueModel);
+                    ///////使用力矩相对于世界坐标坐标系，而不是相对于力传感器自身
+                    FS.Children.Remove(TorqueModel);
+                    MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
+                    Point3D M = new Point3D(tempF[3] + EndPosition.X, tempF[4] + EndPosition.Y, tempF[5] + EndPosition.Z);
+                    meshBuilderTorque.AddArrow(EndPosition, M, 5);
+                    TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
+                    FS.Children.Add(TorqueModel);
+                }
+                else    //相对于力传感器的坐标系
+                {
+                    Point3D F = new Point3D(tempF[1] + OriPosition.X, tempF[0] + OriPosition.Y, -tempF[2] + OriPosition.Z);
+                    meshBuilderForce.AddArrow(OriPosition, F, 5);
+                    ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
+                    FS.Children.Add(ForceModel);
+
+                    ///////使用力矩相对于世界坐标坐标系，而不是相对于力传感器自身
+                    FS.Children.Remove(TorqueModel);
+                    MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
+                    Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
+                    meshBuilderTorque.AddArrow(OriPosition, M, 5);
+                    TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
+                    FS.Children.Add(TorqueModel);
+                }
+
             }
             ////////////////////////////////////////////////////////
             joints[0].model.Transform = F1; //First joint
@@ -542,8 +574,11 @@ namespace HelixSCARA
             AxisX.Transform = F4;
             AxisY.Transform = F4;
             AxisZ.Transform = F4;
-            ForceModel.Transform = F4;
-            TorqueModel.Transform = F4;
+            if(ForceShowMode == 1)
+            {
+                ForceModel.Transform = F4;
+                TorqueModel.Transform = F4;
+            }
 
             if(IsFirstFlag)  //发现第一此运行的时候
             {
@@ -581,6 +616,22 @@ namespace HelixSCARA
             double[] tempF = { FD.FX, FD.FY , FD.FZ , FD.MX ,FD.MY ,FD.MZ };
             ForwardKinematics(angles, tempF);
             //updateSpherePosition();
+        }
+
+        void radio_Checked(object sender, RoutedEventArgs e)
+        {
+            // 同UnChecked判断。
+            RadioButton btn = sender as RadioButton;
+            if (btn == null)
+                return;
+            if (btn.Name == "rbabsolute")
+            {
+                ForceShowMode = 0;
+            }
+            if (btn.Name == "rbrelative")
+            {
+                ForceShowMode = 1;
+            }
         }
 
     }
