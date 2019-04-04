@@ -221,28 +221,28 @@ namespace HelixSCARA
             FS.Children.Add(EndOrigin);
 
             builder.Add(new MeshBuilder(true, true));
-            builder[1].AddArrow(OriPosition, ForceCoordinateSystem[0], 8);
+            builder[1].AddArrow(OriPosition, ForceCoordinateSystem[0], 5);
             AxisX = new GeometryModel3D(builder[1].ToMesh(), Materials.Red);
             FS.Children.Add(AxisX);
 
             builder.Add(new MeshBuilder(true, true));
-            builder[2].AddArrow(OriPosition, ForceCoordinateSystem[1], 8);
+            builder[2].AddArrow(OriPosition, ForceCoordinateSystem[1], 5);
             AxisY = new GeometryModel3D(builder[2].ToMesh(), Materials.Green);
             FS.Children.Add(AxisY);
 
             builder.Add(new MeshBuilder(true, true));
-            builder[3].AddArrow(OriPosition, ForceCoordinateSystem[2], 8);
+            builder[3].AddArrow(OriPosition, ForceCoordinateSystem[2], 5);
             AxisZ = new GeometryModel3D(builder[3].ToMesh(), Materials.Blue);
             FS.Children.Add(AxisZ);
 
 
                 builder.Add(new MeshBuilder(true, true));
-                builder[4].AddArrow(OriPosition, OriPosition, 3);
+                builder[4].AddArrow(OriPosition, OriPosition, 8);
                 ForceModel = new GeometryModel3D(builder[4].ToMesh(), Materials.Gold);
                 FS.Children.Add(ForceModel);
 
                 builder.Add(new MeshBuilder(true, true));
-                builder[5].AddArrow(OriPosition, OriPosition, 3);
+                builder[5].AddArrow(OriPosition, OriPosition, 8);
                 TorqueModel = new GeometryModel3D(builder[5].ToMesh(), Materials.Indigo);
                 FS.Children.Add(TorqueModel);
 
@@ -536,7 +536,7 @@ namespace HelixSCARA
                 {
                     ///////使用力相对于世界坐标坐标系，而不是相对于力传感器自身
                     Point3D F = new Point3D(tempF[0] + EndPosition.X, tempF[1] + EndPosition.Y, tempF[2] + EndPosition.Z);
-                    meshBuilderForce.AddArrow(EndPosition, F, 5);
+                    meshBuilderForce.AddArrow(EndPosition, F, 8);
                     ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
                     FS.Children.Add(ForceModel);
 
@@ -544,14 +544,14 @@ namespace HelixSCARA
                     FS.Children.Remove(TorqueModel);
                     MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
                     Point3D M = new Point3D(tempF[3] + EndPosition.X, tempF[4] + EndPosition.Y, tempF[5] + EndPosition.Z);
-                    meshBuilderTorque.AddArrow(EndPosition, M, 5);
+                    meshBuilderTorque.AddArrow(EndPosition, M, 8);
                     TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
                     FS.Children.Add(TorqueModel);
                 }
                 else    //相对于力传感器的坐标系
                 {
                     Point3D F = new Point3D(tempF[1] + OriPosition.X, tempF[0] + OriPosition.Y, -tempF[2] + OriPosition.Z);
-                    meshBuilderForce.AddArrow(OriPosition, F, 5);
+                    meshBuilderForce.AddArrow(OriPosition, F, 8);
                     ForceModel = new GeometryModel3D(meshBuilderForce.ToMesh(), Materials.Gold);
                     FS.Children.Add(ForceModel);
 
@@ -559,7 +559,7 @@ namespace HelixSCARA
                     FS.Children.Remove(TorqueModel);
                     MeshBuilder meshBuilderTorque = new MeshBuilder(true, true);
                     Point3D M = new Point3D(tempF[4] + OriPosition.X, tempF[3] + OriPosition.Y, -tempF[5] + OriPosition.Z);
-                    meshBuilderTorque.AddArrow(OriPosition, M, 5);
+                    meshBuilderTorque.AddArrow(OriPosition, M, 8);
                     TorqueModel = new GeometryModel3D(meshBuilderTorque.ToMesh(), Materials.Indigo);
                     FS.Children.Add(TorqueModel);
                 }
